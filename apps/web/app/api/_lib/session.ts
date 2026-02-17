@@ -77,6 +77,10 @@ export type AuthSession = {
   sessionId: string;
 };
 
+type GetAuthSessionOptions = {
+  mutateCookies?: boolean;
+};
+
 export async function createUserSession(user: {
   id: string;
   tenantId: string;
@@ -128,7 +132,8 @@ export async function clearUserSession() {
   cookieStore.delete(SESSION_COOKIE_NAME);
 }
 
-export async function getAuthSession(): Promise<AuthSession | null> {
+export async function getAuthSession(options: GetAuthSessionOptions = {}): Promise<AuthSession | null> {
+  const mutateCookies = options.mutateCookies ?? false;
   const cookieStore = await cookies();
   const rawToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
   if (!rawToken) return null;
@@ -154,7 +159,9 @@ export async function getAuthSession(): Promise<AuthSession | null> {
     .where(and(eq(userSessions.sessionTokenHash, hashed), gt(userSessions.expiresAt, new Date())));
 
   if (!row || !row.isActive) {
-    cookieStore.delete(SESSION_COOKIE_NAME);
+    if (mutateCookies) {
+      cookieStore.delete(SESSION_COOKIE_NAME);
+    }
     return null;
   }
 
@@ -164,13 +171,15 @@ export async function getAuthSession(): Promise<AuthSession | null> {
     .set({ lastSeenAt: new Date(), expiresAt: refreshedExpiry, updatedAt: new Date() })
     .where(eq(userSessions.id, row.sessionId));
 
-  cookieStore.set(SESSION_COOKIE_NAME, rawToken, {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    path: "/",
-    expires: refreshedExpiry
-  });
+  if (mutateCookies) {
+    cookieStore.set(SESSION_COOKIE_NAME, rawToken, {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      path: "/",
+      expires: refreshedExpiry
+    });
+  }
 
   return {
     sessionId: row.sessionId,

@@ -3,7 +3,7 @@ import { getAuthSession } from "../../_lib/session";
 
 export async function GET() {
   try {
-    const session = await getAuthSession();
+    const session = await getAuthSession({ mutateCookies: true });
     if (!session) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
     return NextResponse.json({

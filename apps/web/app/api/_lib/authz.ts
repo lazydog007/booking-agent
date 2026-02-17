@@ -8,7 +8,7 @@ export function canModify(role: DashboardRole) {
 }
 
 export async function requireDashboardSession() {
-  const session = await getAuthSession();
+  const session = await getAuthSession({ mutateCookies: true });
   if (!session) {
     return {
       ok: false as const,

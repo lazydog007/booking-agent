@@ -1,61 +1,103 @@
-# Booking Agent (WhatsApp + Internal Calendar)
+# Booking Agent
 
-Multi-tenant SaaS scaffold for AI-assisted WhatsApp booking with a first-party calendar for any appointment-based business.
+Multi-tenant WhatsApp booking platform with an AI agent and a first-party calendar.
 
-## Stack
+## Tech Stack
 
 - Next.js App Router + TypeScript
-- Postgres + Drizzle ORM
-- OpenAI Responses API (tool-calling agent)
-- Meta Cloud API (WhatsApp)
-- pnpm workspace monorepo
+- PostgreSQL + Drizzle ORM
+- OpenAI Responses API (agent tooling/runtime)
+- Meta Cloud API (WhatsApp integration)
+- `pnpm` workspace monorepo
 
-## Quick Start
+## Monorepo Structure
 
-1. Install deps
+- `apps/web`: Next.js UI + HTTP API routes (`app/api/**`)
+- `packages/domain`: scheduling logic and policies
+- `packages/db`: Drizzle schema, migrations, and DB client
+- `packages/agent`: agent runtime, prompts, and tool schemas
+- `packages/integrations`: provider integrations (Meta/WhatsApp)
+- `packages/shared`: shared types/utilities
+- `packages/jobs`: background workers/entrypoints
+
+## Prerequisites
+
+- Node.js 20+
+- `pnpm` 9+
+- PostgreSQL 15+ (or Docker)
+
+## Local Setup
+
+1. Install dependencies:
 ```bash
 pnpm install
 ```
-2. Configure env
+
+2. Create environment file:
 ```bash
 cp .env.example .env
 ```
-3. Run app
+
+3. Run database migrations:
+```bash
+pnpm db:migrate
+```
+
+4. Start the web app:
 ```bash
 pnpm dev
 ```
 
-## Auth (Session-based)
+5. Open `http://localhost:3000`.
 
-- Visit `/login`.
-- First run: use **First-time Setup** to create your business workspace + owner account (available only when no users exist).
-- After setup, sign in with email/password.
-- Dashboard and dashboard APIs are session-protected.
-- Workspace (`tenant`) + role are inferred from server-side session (no client-provided tenant id).
+## Environment Variables
 
-## Important API Endpoints
+Required in `.env`:
 
-- `POST /api/auth/bootstrap`
-- `POST /api/auth/login`
-- `POST /api/auth/logout`
-- `GET /api/auth/session`
-- `POST /api/webhooks/whatsapp/meta`
-- `GET /api/dashboard/whatsapp/integrations`
-- `POST /api/dashboard/whatsapp/integrations`
-- `GET /api/dashboard/whatsapp/channels`
-- `POST /api/dashboard/whatsapp/channels`
-- `PATCH /api/dashboard/whatsapp/channels/:id`
-- `POST /api/dashboard/whatsapp/channels/:id/verify`
-- `POST /api/availability/query`
-- `POST /api/appointments/book`
-- `POST /api/appointments/:id/cancel`
-- `POST /api/appointments/:id/reschedule`
-- `GET /api/dashboard/appointments`
-- `POST /api/dashboard/busy-blocks`
+- `DATABASE_URL`
+- `SESSION_SECRET`
+- `ENCRYPTION_KEY`
+- `OPENAI_API_KEY`
 
-## Notes
+Optional/common:
 
-- External calendar providers are intentionally not used in MVP.
-- Overlap prevention is enforced at DB level using exclusion constraints.
-- WhatsApp webhook intake writes to `webhook_events_inbox`; run `processWebhookEventsBatch` from `@booking-agent/jobs` in a worker loop.
-# booking-agent
+- `OPENAI_MODEL` (default: `gpt-4.1-mini`)
+- `META_VERIFY_TOKEN`
+- `META_APP_SECRET`
+
+## Workspace Commands
+
+Run from repository root:
+
+- `pnpm dev`: start web app (`@booking-agent/web`)
+- `pnpm dev:all`: start web app + webhook worker
+- `pnpm build`: type-check/build all workspaces
+- `pnpm lint`: lint/type-check all workspaces
+- `pnpm test`: run Vitest across all workspaces
+- `pnpm db:generate`: generate Drizzle migrations
+- `pnpm db:migrate`: apply migrations
+
+## Webhook Worker
+
+Incoming webhook events are persisted and processed asynchronously.
+
+- Local worker loop:
+```bash
+pnpm dlx tsx packages/jobs/src/run-webhook-worker.ts
+```
+- Or run both app and worker together:
+```bash
+pnpm dev:all
+```
+
+## Docker (Optional)
+
+Start web + worker using compose:
+
+```bash
+docker compose up --build
+```
+
+Services:
+- `web`: runs migrations, then starts Next.js server on port `3000`
+- `worker`: runs webhook event processor loop
