@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "strict": true,
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "baseUrl": ".",
+    "paths": {
+      "@booking-agent/db/*": ["packages/db/src/*"],
+      "@booking-agent/domain/*": ["packages/domain/src/*"],
+      "@booking-agent/agent/*": ["packages/agent/src/*"],
+      "@booking-agent/shared/*": ["packages/shared/src/*"],
+      "@booking-agent/integrations/*": ["packages/integrations/src/*"]
+    }
+  }
+}

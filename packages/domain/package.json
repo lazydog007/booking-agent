@@ -1,0 +1,26 @@
+{
+  "name": "@booking-agent/domain",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.json --noEmit",
+    "lint": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "@booking-agent/db": "workspace:*",
+    "@booking-agent/shared": "workspace:*",
+    "drizzle-orm": "^0.36.4",
+    "luxon": "^3.5.0",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@types/luxon": "^3.4.2",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8",
+    "@types/node": "^22.10.2"
+  }
+}
