@@ -10,15 +10,22 @@ services:
       ENCRYPTION_KEY: ${ENCRYPTION_KEY}
       OPENAI_API_KEY: ${OPENAI_API_KEY}
       OPENAI_MODEL: gpt-4.1-mini
-      META_VERIFY_TOKEN: ""
-      META_APP_SECRET: ""
+      META_VERIFY_TOKEN: ${META_VERIFY_TOKEN}
+      META_APP_SECRET: ${META_APP_SECRET}
       PORT: 3000
+      HOSTNAME: 0.0.0.0
     command:
       - sh
       - -lc
-      - pnpm db:migrate && pnpm --filter @booking-agent/web start -- -p ${PORT:-3000}
-    ports:
-      - "3000:3000"
+      - pnpm db:migrate && pnpm --filter @booking-agent/web exec next start -p ${PORT:-3000} -H ${HOSTNAME:-0.0.0.0}
+    expose:
+      - "3000"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:${PORT:-3000}/ > /dev/null || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
 
   worker:
     build:
@@ -30,7 +37,7 @@ services:
       ENCRYPTION_KEY: ${ENCRYPTION_KEY}
       OPENAI_API_KEY: ${OPENAI_API_KEY}
       OPENAI_MODEL: gpt-4.1-mini
-      META_APP_SECRET: ""
+      META_APP_SECRET: ${META_APP_SECRET}
       WEBHOOK_WORKER_BATCH_SIZE: 20
       WEBHOOK_WORKER_INTERVAL_MS: 2000
       WEBHOOK_WORKER_LOOP: "true"
